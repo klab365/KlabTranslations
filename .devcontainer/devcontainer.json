@@ -1,0 +1,29 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
+{
+	"name": "KlabTranslations DevContainer",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"build": {
+		"dockerfile": "../Dockerfile",
+		"args": {
+			"UID": "1000"
+		},
+		"target": "development"
+	},
+	"remoteUser": "dev",
+	"runArgs": [],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-dotnettools.csdevkit",
+				"skellock.just",
+				"github.copilot",
+				"ms-vscode.test-adapter-converter",
+				"mhutchie.git-graph",
+				"eamodio.gitlens"
+			]
+		}
+	},
+
+	"postCreateCommand": "echo 'Dev container ready dotnet development!'"
+}

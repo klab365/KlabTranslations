@@ -1,25 +1,26 @@
-set windows-powershell
+CMD_ENV := if path_exists('/.dockerenv') == "false" { 'docker run --rm -u $(id -u) -v $(pwd):/workspaces/KlabTranslations -w /workspaces/KlabTranslations klabtranslations-toolchain' } else { '' }
+
+build-ci-docker UID='1000':
+    docker build --build-arg UID={{UID}} --target ci --tag klabtranslations-toolchain -f Dockerfile .
 
 # build the project
 build configuration='Debug' *args='':
-    dotnet build -c {{configuration}}
+    {{CMD_ENV}} dotnet build -c {{configuration}} {{args}}
 
 release version='0.0.0':
     just build Releae /p:Version={{version}}
 
 # clean the project
 clean:
-    dotnet clean
-    find . -name bin -type d -exec rm -rf {} \;
-    find . -name obj -type d -exec rm -rf {} \;
+    {{CMD_ENV}} dotnet clean
 
 # run the tests
-test:
-    dotnet run --project tests/Klab.Translations.Core.UnitTests/Klab.Translations.Core.UnitTests.csproj
+test configuration='Debug' *args='':
+    {{CMD_ENV}} dotnet test -c {{configuration}} {{args}}
 
 # format the code using dotnet format and the .editorconfig file
 format *args:
-    dotnet format -v diag {{args}}
+    {{CMD_ENV}} dotnet format --no-restore -v diag {{args}}
 
 # check the code format using dotnet format and the .editorconfig file
 check-format:
