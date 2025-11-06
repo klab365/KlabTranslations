@@ -13,19 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: "8.0.x"
+      - uses: extractions/setup-just@v3
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Build Docker CI image
+        run: just build-ci-docker $(id -u)
 
-      - name: Run dotnet format
+      - name: Build
+        run: just build
+
+      - name: Check
         run: just check-format
 
       - name: Test
         run: just test Release
 
-      - name: Release
-        run: just release 0.0.0

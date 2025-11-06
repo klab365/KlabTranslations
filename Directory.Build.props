@@ -1,5 +1,7 @@
 <Project>
   <PropertyGroup>
+    <AssemblyCompany>KlabTranslations</AssemblyCompany>
+    <AssemblyProduct>KlabTranslations</AssemblyProduct>
     <Version>0.0.0</Version>
     <NeutralLanguage>en-US</NeutralLanguage>
     <LangVersion>13.0</LangVersion>
@@ -13,6 +15,22 @@
 
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Only generate packages for non-test, non-generator projects -->
+    <GeneratePackageOnBuild Condition="!$(MSBuildProjectName.Contains('Tests')) AND !$(MSBuildProjectName.Contains('Generator'))">true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Label="NuGet">
+    <Authors>Burak Kizilkaya</Authors>
+    <Copyright>Copyright (C) 2025 klab</Copyright>
+    <RepositoryUrl>https://github.com/BuriKizilkaya/KlabTranslations</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <GenerateRepositoryUrlAttribute>true</GenerateRepositoryUrlAttribute>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
   </PropertyGroup>
 
   <!-- general packages -->
@@ -29,6 +47,26 @@
   </ItemGroup>
 
   <!-- Test projects -->
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('Tests'))">
+    <TargetFramework>net9.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <!-- Generator projects -->
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('Generator'))">
+    <IsPackable>false</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+
   <ItemGroup Condition="$(MSBuildProjectName.Contains('Tests'))">
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="Bogus" Version="35.6.4" />
