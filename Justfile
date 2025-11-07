@@ -15,8 +15,11 @@ clean:
     {{CMD_ENV}} dotnet clean
 
 # run the tests
-test configuration='Debug' *args='':
-    {{CMD_ENV}} dotnet test -c {{configuration}} {{args}}
+test reportPath="./tmp" *args='':
+    {{CMD_ENV}} dotnet-coverage \
+        collect -f xml \
+        -o {{reportPath}}/coverage.xml \
+        "dotnet test --verbosity normal --logger:junit;MethodFormat=Class;LogFilePath={{reportPath}}/{assembly}.results.xml {{args}}"
 
 # format the code using dotnet format and the .editorconfig file
 format *args:
@@ -25,3 +28,7 @@ format *args:
 # check the code format using dotnet format and the .editorconfig file
 check-format:
     just format --verify-no-changes
+
+ru: run-uiex
+run-uiex:
+    dotnet run --project samples/KlabTranslations.AvaloniaExample/KlabTranslations.AvaloniaExample.csproj
