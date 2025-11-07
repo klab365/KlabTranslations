@@ -15,6 +15,14 @@ RUN <<EOF
     rm -rf /var/lib/apt/lists/*
 EOF
 
+# Install dotnet tools as user, because permissions
+USER dev
+ENV PATH="/home/dev/.dotnet/tools:${PATH}"
+RUN dotnet tool install --global dotnet-coverage
+
+# Switch back to root for the next stage setup if needed
+USER root
+
 FROM ci AS development
 
 RUN <<EOF
@@ -29,6 +37,12 @@ RUN <<EOF
     su - dev -c 'sed -i "s/plugins=(git)/plugins=(git zsh-autosuggestions)/" ~/.zshrc'
     curl -sS https://starship.rs/install.sh | sh -s -- --yes
     su - dev -c 'echo "eval \"\$(starship init zsh)\"" >> ~/.zshrc'
+
+    # UI Stuff
+    apt install -y libice6 libsm6 libfontconfig1 libgdiplus
+
+    # Install dotnet tools / templates
+    dotnet new install xunit.v3.templates
 
     # cleanup
     apt-get clean

@@ -13,9 +13,6 @@ public sealed class TranslationUnitTests : IDisposable
 
     public TranslationUnitTests()
     {
-        // Reset the provider to clear any event subscriptions from previous tests
-        TranslationProvider.Reset();
-
         // Set to English so constructor doesn't fail
         TranslationProvider.SetCulture(new CultureInfo("en-US"));
     }
@@ -28,9 +25,6 @@ public sealed class TranslationUnitTests : IDisposable
             unit.Dispose();
         }
         _createdUnits.Clear();
-
-        // Reset provider to clean state
-        TranslationProvider.Reset();
     }
 
     private TranslationUnit CreateTranslationUnit(string key, Dictionary<string, string> translations)
@@ -45,14 +39,13 @@ public sealed class TranslationUnitTests : IDisposable
     {
         // Arrange
         Dictionary<string, string> translations = new()
-
         {
             { "en", "Hello" },
             { "fr", "Bonjour" }
         };
 
         // Act
-        TranslationUnit unit = CreateTranslationUnit("greeting", translations);
+        using TranslationUnit unit = CreateTranslationUnit("greeting", translations);
 
         // Assert
         unit.CurrentValue.Should().Be("Hello"); // Should be English translation, not key
@@ -66,14 +59,13 @@ public sealed class TranslationUnitTests : IDisposable
     {
         // Arrange
         Dictionary<string, string> translations = new()
-
         {
             { "en", "Hello" },
             { "fr", "Bonjour" }
         };
 
         // Act
-        TranslationUnit unit = new("greeting", translations);
+        using TranslationUnit unit = new("greeting", translations);
         string initialValue = unit.Value.Take(1).Wait();
 
         // Assert
@@ -90,7 +82,7 @@ public sealed class TranslationUnitTests : IDisposable
             { "fr", "Bonjour" },
             { "de", "Hallo" }
         };
-        TranslationUnit unit = new("greeting", translations);
+        using TranslationUnit unit = new("greeting", translations);
         List<string> valueChanges = new();
         unit.Value.Subscribe(valueChanges.Add);
 
@@ -107,12 +99,11 @@ public sealed class TranslationUnitTests : IDisposable
     {
         // Arrange
         Dictionary<string, string> translations = new()
-
         {
             { "en", "Hello" },
             { "fr", "Bonjour" }
         };
-        TranslationUnit unit = new("greeting", translations);
+        using TranslationUnit unit = new("greeting", translations);
 
         // Act & Assert
         Action act = () => TranslationProvider.SetCulture(new CultureInfo("es-ES")); // Spanish not in translations
@@ -130,7 +121,7 @@ public sealed class TranslationUnitTests : IDisposable
             { "fr", "Bonjour" },
             { "de", "Hallo" }
         };
-        TranslationUnit unit = new("greeting", translations);
+        using TranslationUnit unit = new("tmp", translations);
         List<string> valueChanges = new();
         unit.Value.Subscribe(valueChanges.Add);
 
@@ -148,12 +139,11 @@ public sealed class TranslationUnitTests : IDisposable
     {
         // Arrange
         Dictionary<string, string> translations = new()
-
         {
             { "en", "Hello" },
             { "fr", "Bonjour" }
         };
-        TranslationUnit unit = new("greeting", translations);
+        using TranslationUnit unit = new("greeting", translations);
 
         // Act
         TranslationProvider.SetCulture(new CultureInfo("en-GB")); // Should use "en"
@@ -172,7 +162,7 @@ public sealed class TranslationUnitTests : IDisposable
             { "en", "Hello" },
             { "fr", "Bonjour" }
         };
-        TranslationUnit unit = new("greeting", translations);
+        using TranslationUnit unit = new("greeting", translations);
         List<string> receivedValues = new();
 
         // Act
@@ -205,13 +195,12 @@ public sealed class TranslationUnitTests : IDisposable
     {
         // Arrange
         Dictionary<string, string> translations = new()
-
         {
             { "en", "Hello" },
             { "fr", "Bonjour" },
             { "de", "Hallo" }
         };
-        TranslationUnit unit = new("greeting", translations);
+        using TranslationUnit unit = new("greeting", translations);
 
         // Act
         TranslationProvider.SetCulture(new CultureInfo(culture));
@@ -228,14 +217,13 @@ public sealed class TranslationUnitTests : IDisposable
     {
         // Arrange
         Dictionary<string, string> translations = new()
-
         {
             { "en", "Hello" },
             { "fr", "Bonjour" },
             { "de", "Hallo" }
         };
 
-        TranslationUnit unit = new("greeting", translations);
+        using TranslationUnit unit = new("greeting", translations);
 
         // Act & Assert
         Action act = () => TranslationProvider.SetCulture(new CultureInfo(culture));
@@ -248,12 +236,11 @@ public sealed class TranslationUnitTests : IDisposable
     {
         // Arrange
         Dictionary<string, string> translations = new()
-
         {
             { "en", "Hello" },
             { "fr", "Bonjour" }
         };
-        TranslationUnit unit = new("greeting", translations);
+        using TranslationUnit unit = new("greeting", translations);
 
         // Act
         TranslationProvider.SetCulture(new CultureInfo("fr-CA")); // French Canada should use "fr"

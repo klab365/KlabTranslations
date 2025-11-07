@@ -21,22 +21,6 @@ public class Generator : IIncrementalGenerator
             .AdditionalTextsProvider
             .Where(file => file.Path.EndsWith("Translations.csv"));
 
-        context.RegisterSourceOutput(csvFiles.Collect(), (spc, files) =>
-        {
-            if (files.Length == 0)
-            {
-                spc.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor(
-                        "KTRANS001",
-                        "Missing Translations.csv file",
-                        "The required Translations.csv file was not found in the project",
-                        "KlabTranslations",
-                        DiagnosticSeverity.Error,
-                        true),
-                    Location.None));
-            }
-        });
-
         // Parse CSV file
         IncrementalValuesProvider<TranslationData?> translationData = csvFiles.Select((file, cancellationToken) =>
         {
@@ -76,7 +60,7 @@ public class Generator : IIncrementalGenerator
         sb.AppendLine($"namespace {rootNamespace};");
 
         // Generate constants for keys
-        sb.AppendLine("public static class Translations");
+        sb.AppendLine("public static class Strings");
         sb.AppendLine("{");
 
         foreach (TranslationEntry entry in data.Translations)

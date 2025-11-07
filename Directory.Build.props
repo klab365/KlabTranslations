@@ -9,6 +9,8 @@
     <Company>klab365</Company>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
 
+    <TargetFramework>netstandard2.0</TargetFramework>
+
     <AnalysisMode>Recommended</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -19,6 +21,10 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Only generate packages for non-test, non-generator projects -->
     <GeneratePackageOnBuild Condition="!$(MSBuildProjectName.Contains('Tests')) AND !$(MSBuildProjectName.Contains('Generator'))">true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Variables">
+    <AvaloniaVersion>11.*</AvaloniaVersion>
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet">
@@ -68,6 +74,7 @@
 
 
   <ItemGroup Condition="$(MSBuildProjectName.Contains('Tests'))">
+    <PackageReference Include="JunitXml.TestLogger" Version="7.0.2" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="Bogus" Version="35.6.4" />
     <PackageReference Include="AwesomeAssertions" Version="9.2.0" />

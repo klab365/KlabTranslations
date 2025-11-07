@@ -28,7 +28,7 @@ public sealed record TranslationUnit : IDisposable
     /// <summary>
     /// Gets the dictionary of translations mapped by culture.
     /// </summary>
-    public Dictionary<CultureInfo, string> Translations { get; }
+    public IReadOnlyDictionary<CultureInfo, string> Translations { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TranslationUnit"/> class.

@@ -35,13 +35,4 @@ public static class TranslationProvider
         CurrentCulture = culture;
         CultureChanged?.Invoke(null, CurrentCulture);
     }
-
-    /// <summary>
-    /// Resets the TranslationProvider to its initial state. Used for testing.
-    /// </summary>
-    internal static void Reset()
-    {
-        CultureChanged = null;
-        CurrentCulture = CultureInfo.CurrentUICulture;
-    }
 }
