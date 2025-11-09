@@ -67,14 +67,15 @@ public class Generator : IIncrementalGenerator
         {
             StringBuilder translationDictSb = new();
             translationDictSb.AppendLine("new Dictionary<string, string>()");
-            translationDictSb.AppendLine("    {");
+            translationDictSb.AppendLine("        {");
             foreach (KeyValuePair<string, string> kvp in entry.Translations)
             {
-                translationDictSb.AppendLine($"        [\"{kvp.Key}\"] = \"{kvp.Value.Replace("\"", "\\\"")}\",");
+                translationDictSb.AppendLine($"            [\"{kvp.Key}\"] = \"{kvp.Value.Replace("\"", "\\\"")}\",");
             }
 
-            translationDictSb.Append("    }");
-            sb.AppendLine($"    public static readonly KlabTranslations.Core.TranslationUnit {entry.Key} = new(\"{entry.Key}\", {translationDictSb.ToString()});");
+            translationDictSb.Append("        }");
+            sb.AppendLine($"    public static KlabTranslations.Core.TranslationUnit {entry.Key} =>");
+            sb.AppendLine($"        new(\"{entry.Key}\", {translationDictSb});");
             sb.AppendLine();
         }
 

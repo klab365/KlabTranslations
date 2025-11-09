@@ -15,5 +15,9 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>KlabTranslations.Avalonia.Tests</_Parameter1>
     </AssemblyAttribute>
+
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>KlabTranslations.Generator.Avalonia</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

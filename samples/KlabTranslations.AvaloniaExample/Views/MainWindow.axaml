@@ -8,7 +8,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="KlabTranslations.AvaloniaExample.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Width="300" Height="300"
+        Width="400" Height="600"
         Icon="/Assets/avalonia-logo.ico"
         Title="KlabTranslations.AvaloniaExample">
 
@@ -24,8 +24,45 @@
             <Button x:Name="BtnSetCultureGerman" Content="German" Command="{Binding SetCulture}" CommandParameter="de"/>
         </StackPanel>
 
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,15">
+            <TextBlock FontSize="12" FontWeight="Bold" Margin="0,0,0,5">Test Parameters:</TextBlock>
+            
+            <!-- Input for UserName -->
+            <StackPanel Margin="0,0,0,10">
+                <TextBlock FontSize="11" Foreground="Gray">User Name:</TextBlock>
+                <TextBox Text="{Binding UserName}" Padding="8" Height="32"/>
+            </StackPanel>
+            
+            <!-- Input for MessageCount -->
+            <StackPanel>
+                <TextBlock FontSize="11" Foreground="Gray">Message Count:</TextBlock>
+                <TextBox Text="{Binding MessageCount}" Padding="8" Height="32"/>
+            </StackPanel>
+        </StackPanel>
+
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+            <!-- Simple translation without parameters -->
             <TextBlock x:Name="ResultTextBlock" FontSize="16" Text="{klab:Translate {x:Static translations:Strings.hello_world}}"/>
+            
+            <!-- Parameterized translation with static parameters -->
+            <TextBlock FontSize="14" Text="{klab:Translate {x:Static translations:Strings.welcome_user}, Param0='John'}"/>
+            <TextBlock FontSize="14" Text="{klab:Translate {x:Static translations:Strings.welcome_user}, Param0='Peter'}"/>
+            <TextBlock FontSize="14" Text="{klab:Translate {x:Static translations:Strings.welcome_user}, Param0='Max'}"/>
+            
+            <!-- Parameterized translation with multiple static parameters -->
+            <TextBlock FontSize="14" Text="{klab:Translate {x:Static translations:Strings.user_info}, Param0='Alice', Param1=25}"/>
+            
+            <!-- Another parameterized example -->
+            <TextBlock FontSize="14" Text="{klab:Translate {x:Static translations:Strings.message_count}, Param0=3}"/>
+            
+            <!-- NEW: Parameterized translation with binding parameters -->
+            <TextBlock x:Name="BoundUserNameTextBlock" FontSize="14" Text="{klab:Translate {x:Static translations:Strings.welcome_user}, Param0={Binding UserName}}"/>
+            
+            <!-- NEW: Parameter binding that updates dynamically -->
+            <TextBlock x:Name="BoundMessageCountTextBlock" FontSize="14" Text="{klab:Translate {x:Static translations:Strings.message_count}, Param0={Binding MessageCount}}"/>
+            
+            <!-- NEW: Mixed static and binding parameters -->
+            <TextBlock x:Name="BoundMixedTextBlock" FontSize="14" Text="{klab:Translate {x:Static translations:Strings.user_info}, Param0={Binding UserName}, Param1=42}"/>
         </StackPanel>
     </DockPanel>
 </Window>

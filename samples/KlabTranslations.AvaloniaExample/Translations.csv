@@ -3,3 +3,6 @@ hello_world,Hallo Welt,Hello World
 goodbye,Auf Wiedersehen,Goodbye
 welcome,Willkommen,Welcome
 thank_you,Danke,Thank you
+welcome_user,Willkommen {0}!,Welcome {0}!
+user_info,{0} ist {1} Jahre alt,{0} is {1} years old
+message_count,Sie haben {0} Nachrichten,You have {0} messages

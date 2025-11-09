@@ -7,30 +7,27 @@ namespace KlabTranslations.Core.Tests;
 
 #pragma warning disable S1481 // Unused local variables should be removed
 
+[Collection("TranslationProvider")]
 public sealed class TranslationUnitTests : IDisposable
 {
-    private readonly List<TranslationUnit> _createdUnits = new();
+    private readonly CultureInfo _originalCulture;
 
     public TranslationUnitTests()
     {
-        // Set to English so constructor doesn't fail
+        // Store original culture and set to English for consistent tests
+        _originalCulture = TranslationProvider.CurrentCulture;
         TranslationProvider.SetCulture(new CultureInfo("en-US"));
     }
 
     public void Dispose()
     {
-        // Dispose all created units to clean up event subscriptions
-        foreach (TranslationUnit unit in _createdUnits)
-        {
-            unit.Dispose();
-        }
-        _createdUnits.Clear();
+        // Restore original culture to avoid affecting other tests
+        TranslationProvider.SetCulture(_originalCulture);
     }
 
-    private TranslationUnit CreateTranslationUnit(string key, Dictionary<string, string> translations)
+    private static TranslationUnit CreateTranslationUnit(string key, Dictionary<string, string> translations)
     {
         TranslationUnit unit = new(key, translations);
-        _createdUnits.Add(unit);
         return unit;
     }
 

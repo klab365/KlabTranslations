@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace KlabTranslations.Core;
@@ -9,14 +10,15 @@ namespace KlabTranslations.Core;
 public sealed record TranslationUnit : IDisposable
 {
     private readonly BehaviorSubject<string> _value;
+    private readonly TranslationParameters _parameters;
 
     /// <summary>
-    /// Value stream that emits the current translation based on the active culture.
+    /// Value stream that emits the current translation based on the active culture and parameters.
     /// </summary>
     public IObservable<string> Value => _value;
 
     /// <summary>
-    /// Gets the current translation value for the active culture.
+    /// Gets the current translation value for the active culture with parameters resolved.
     /// </summary>
     public string CurrentValue => _value.Value;
 
@@ -31,20 +33,35 @@ public sealed record TranslationUnit : IDisposable
     public IReadOnlyDictionary<CultureInfo, string> Translations { get; }
 
     /// <summary>
+    /// Gets the parameters collection for this translation unit.
+    /// Use this to set indexed parameters like: unit.Parameters[0] = "value"
+    /// Or named parameters like: unit.Parameters["name"] = "value"
+    /// </summary>
+    public TranslationParameters Parameters => _parameters;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TranslationUnit"/> class.
     /// </summary>
     public TranslationUnit(string key, Dictionary<CultureInfo, string> translations)
     {
         Key = key;
         Translations = translations;
-        _value = new BehaviorSubject<string>(GetTranslationForCulture(TranslationProvider.CurrentCulture));
+        _parameters = new TranslationParameters();
+        _value = new BehaviorSubject<string>(GetResolvedTranslation(TranslationProvider.CurrentCulture));
+
+        // Subscribe to culture changes
         TranslationProvider.CultureChanged += OnCultureChanged;
+
+        // Subscribe to parameter changes
+        _parameters.ParametersChanged.Subscribe(_ => OnParametersChanged());
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TranslationUnit"/> class from string-based culture codes.
     /// </summary>
-    public TranslationUnit(string key, Dictionary<string, string> translations)
+    public TranslationUnit(
+        string key,
+        Dictionary<string, string> translations)
         : this(key, ConvertStringDictionaryToCultureDictionary(translations))
     {
     }
@@ -70,8 +87,68 @@ public sealed record TranslationUnit : IDisposable
 
     private void OnCultureChanged(object? sender, CultureInfo e)
     {
-        string translation = GetTranslationForCulture(e);
+        string translation = GetResolvedTranslation(e);
         _value.OnNext(translation);
+    }
+
+    private void OnParametersChanged()
+    {
+        string translation = GetResolvedTranslation(TranslationProvider.CurrentCulture);
+        _value.OnNext(translation);
+    }
+
+    private string GetResolvedTranslation(CultureInfo culture)
+    {
+        string baseTranslation = GetTranslationForCulture(culture);
+
+        // If no parameters are set, return the base translation
+        if (!_parameters.HasParameters)
+        {
+            return baseTranslation;
+        }
+
+        // If the translation doesn't have parameter placeholders, return as-is
+        if (!ParameterResolver.HasParameters(baseTranslation))
+        {
+            return baseTranslation;
+        }
+
+        try
+        {
+            // Try named parameters first
+            if (_parameters.NamedParameterCount > 0)
+            {
+                IReadOnlyDictionary<string, object?> namedParams = _parameters.GetNamedParametersDictionary();
+                HashSet<string> namedParamNames = ParameterResolver.GetNamedParameterNames(baseTranslation);
+
+                // Check if all required named parameters are available
+                if (namedParamNames.All(name => namedParams.ContainsKey(name)))
+                {
+                    return ParameterResolver.ResolveNamedParameters(baseTranslation, namedParams);
+                }
+            }
+
+            // Try indexed parameters
+            if (_parameters.IndexedParameterCount > 0)
+            {
+                object?[] indexedParams = _parameters.GetIndexedParametersArray();
+                HashSet<int> requiredIndices = ParameterResolver.GetIndexedParameterIndices(baseTranslation);
+
+                // Check if all required indexed parameters are available
+                if (requiredIndices.All(index => index < indexedParams.Length && indexedParams[index] != null))
+                {
+                    return ParameterResolver.ResolveIndexedParameters(baseTranslation, indexedParams);
+                }
+            }
+
+            // If we can't resolve parameters, return the base translation
+            return baseTranslation;
+        }
+        catch (ArgumentException)
+        {
+            // If parameter resolution fails, return the base translation
+            return baseTranslation;
+        }
     }
 
     private string GetTranslationForCulture(CultureInfo culture)
@@ -105,6 +182,7 @@ public sealed record TranslationUnit : IDisposable
     public void Dispose()
     {
         TranslationProvider.CultureChanged -= OnCultureChanged;
+        _parameters.Dispose();
         _value.Dispose();
     }
 }

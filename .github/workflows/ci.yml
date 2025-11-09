@@ -35,7 +35,7 @@ jobs:
         run: just build-ci-docker $(id -u)
 
       - name: Test
-        run: just test Release
+        run: just test ./tmp
 
       - name: SonarQubeScan
         uses: SonarSource/sonarqube-scan-action@bfd4e558cda28cda6b5defafb9232d191be8c203
