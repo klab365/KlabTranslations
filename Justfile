@@ -19,7 +19,7 @@ test reportPath="./tmp" *args='':
     {{CMD_ENV}} dotnet-coverage \
         collect -f xml \
         -o {{reportPath}}/coverage.xml \
-        "dotnet test --verbosity normal --logger:junit;MethodFormat=Class;LogFilePath={{reportPath}}/{assembly}.results.xml {{args}}"
+        "dotnet test --logger:junit;MethodFormat=Class;LogFilePath={{reportPath}}/{assembly}.results.xml {{args}}"
 
 # format the code using dotnet format and the .editorconfig file
 format *args:

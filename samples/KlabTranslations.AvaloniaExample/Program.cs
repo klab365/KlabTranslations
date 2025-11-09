@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Globalization;
 using Avalonia;
+using KlabTranslations.Core;
 
 namespace KlabTranslations.AvaloniaExample;
 
@@ -11,6 +13,8 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        TranslationProvider.SetCulture(CultureInfo.GetCultureInfo("en-US"));
+
         Console.WriteLine($"Current value of HelloWorld: {Strings.hello_world.CurrentValue}");
 
         BuildAvaloniaApp()
