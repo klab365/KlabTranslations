@@ -89,44 +89,6 @@ public sealed class TranslationParameters : IDisposable
     public bool HasParameters => _indexedParameters.Count > 0 || _namedParameters.Count > 0;
 
     /// <summary>
-    /// Sets multiple indexed parameters at once.
-    /// </summary>
-    /// <param name="parameters">Array of parameter values</param>
-    public void SetIndexedParameters(params object?[] parameters)
-    {
-        _indexedParameters.Clear();
-
-        for (int i = 0; i < parameters.Length; i++)
-        {
-            if (parameters[i] != null)
-            {
-                _indexedParameters[i] = parameters[i];
-            }
-        }
-
-        NotifyParametersChanged();
-    }
-
-    /// <summary>
-    /// Sets multiple named parameters at once.
-    /// </summary>
-    /// <param name="parameters">Dictionary of parameter names and values</param>
-    public void SetNamedParameters(IEnumerable<KeyValuePair<string, object?>> parameters)
-    {
-        _namedParameters.Clear();
-
-        foreach (KeyValuePair<string, object?> kvp in parameters)
-        {
-            if (kvp.Value != null)
-            {
-                _namedParameters[kvp.Key] = kvp.Value;
-            }
-        }
-
-        NotifyParametersChanged();
-    }
-
-    /// <summary>
     /// Clears all parameters.
     /// </summary>
     public void Clear()
