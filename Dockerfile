@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS ci
 ARG UID
 RUN <<EOF
     apt-get update
-    apt-get install -y sudo curl
+    apt-get install -y sudo curl libxml2
 
     useradd -m dev -u ${UID}
     echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers

@@ -28,14 +28,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clones is recommended for improving the relevancy of reporting
+          fetch-depth: 0
 
       - uses: extractions/setup-just@v3
 
       - name: Build Docker CI image
         run: just build-ci-docker $(id -u)
 
+      - name: Build (for source generators)
+        run: just build
+
       - name: Test
-        run: just test ./tmp
+        run: just test tmp
 
       - name: SonarQubeScan
         uses: SonarSource/sonarqube-scan-action@bfd4e558cda28cda6b5defafb9232d191be8c203
