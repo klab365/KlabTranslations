@@ -16,10 +16,20 @@ clean:
 
 # run the tests
 test reportPath="./tmp" *args='':
+    #!/usr/bin/env bash
     {{CMD_ENV}} dotnet-coverage \
         collect -f xml \
         -o {{reportPath}}/coverage.xml \
         "dotnet test --logger:junit;MethodFormat=Class;LogFilePath={{reportPath}}/{assembly}.results.xml {{args}}"
+    
+    
+    CONTAINER_PATH=/workspaces/KlabTranslations
+    HOST_PATH=$(pwd) # Assumes running from project root
+    
+    # Replace absolute source paths with relative paths in the coverage XML
+    echo "Adjusting coverage report paths..."
+    # sed -i "s|path=\"${CONTAINER_PATH}/|path=\"${HOST_PATH}/|g" {{reportPath}}/coverage.xml
+    sed -i "s|path=\"${CONTAINER_PATH}/|path=\"|g" {{reportPath}}/coverage.xml
 
 # format the code using dotnet format and the .editorconfig file
 format *args:
