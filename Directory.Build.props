@@ -19,8 +19,8 @@
     <Nullable>enable</Nullable>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <!-- Only generate packages for non-test, non-generator projects -->
-    <GeneratePackageOnBuild Condition="!$(MSBuildProjectName.Contains('Tests')) AND !$(MSBuildProjectName.Contains('Generator'))">true</GeneratePackageOnBuild>
+    <!-- Only generate packages for non-test projects -->
+    <GeneratePackageOnBuild Condition="!$(MSBuildProjectName.Contains('Tests'))">true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Label="Variables">
@@ -68,8 +68,8 @@
 
   <!-- Generator projects -->
   <PropertyGroup Condition="$(MSBuildProjectName.Contains('Generator'))">
-    <IsPackable>false</IsPackable>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
 

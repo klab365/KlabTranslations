@@ -5,7 +5,9 @@ build-ci-docker UID='1000':
 
 # build the project
 build configuration='Debug' *args='':
-    {{CMD_ENV}} dotnet build -c {{configuration}} {{args}}
+    {{CMD_ENV}} dotnet build \
+        --configuration {{configuration}} \
+        {{args}}
 
 release version='0.0.0':
     just build Releae /p:Version={{version}}
@@ -13,6 +15,8 @@ release version='0.0.0':
 # clean the project
 clean:
     {{CMD_ENV}} dotnet clean
+    find . -type d -name 'bin' -exec rm -rf {} +
+    find . -type d -name 'obj' -exec rm -rf {} +
 
 # run the tests
 test reportPath="./tmp" *args='':
@@ -38,6 +42,9 @@ format *args:
 # check the code format using dotnet format and the .editorconfig file
 check-format:
     just format --verify-no-changes
+
+publish *args:
+    {{CMD_ENV}} dotnet nuget push **/*.nupkg --api-key "$SECRETS_NUGETORG_API" --source https://api.nuget.org/v3/index.json {{args}}
 
 ru: run-uiex
 run-uiex:

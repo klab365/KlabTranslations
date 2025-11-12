@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using Avalonia;
+using KlabTranslations.AvaloniaExample.Translations;
 using KlabTranslations.Core;
 
 namespace KlabTranslations.AvaloniaExample;
