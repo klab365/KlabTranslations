@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using KlabTranslations.ConsoleExample;
+using KlabTranslations.ConsoleExample.Translations;
 using KlabTranslations.Core;
 
 Console.WriteLine("=== Testing Translation Generator ===");

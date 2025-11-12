@@ -43,11 +43,7 @@ jobs:
       - name: Test
         run: just test tmp
 
-      - name: Cat coverage report
-        run: cat /home/runner/work/KlabTranslations/KlabTranslations/./tmp/coverage.xml
-
       - name: SonarQubeScan
         uses: SonarSource/sonarqube-scan-action@v6.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-

@@ -1,0 +1,38 @@
+name: CD
+on:
+  push:
+    tags:
+      - "V*.*.*"
+
+jobs:
+  build-test-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: extractions/setup-just@v3
+
+      - name: Extract version number
+        id: extract_version
+        run: echo "version=$(echo ${{ github.ref }} | sed 's/refs\/tags\/V\(.*\)/\1/')" >> $GITHUB_ENV
+
+      - name: Build Docker CI image
+        run: just build-ci-docker $(id -u)
+
+      - name: Build
+        run: just build Release -p:Version=${{ env.version }}
+
+      - name: Publish
+        env:
+          SECRETS_NUGETORG_API: ${{ secrets.NUGETORG_API }}
+        run: just publish
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref }}
+          release_name: Release ${{ env.version }}
+          draft: false
+          prerelease: false
+          artifacts: "**/*.nupkg"
