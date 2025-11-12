@@ -24,9 +24,7 @@ jobs:
         run: just build Release -p:Version=${{ env.version }}
 
       - name: Publish
-        env:
-          SECRETS_NUGETORG_API: ${{ secrets.NUGETORG_API }}
-        run: just publish
+        run: just publish ${{ secrets.NUGETORG_API }}
 
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1

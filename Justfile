@@ -43,8 +43,8 @@ format *args:
 check-format:
     just format --verify-no-changes
 
-publish *args:
-    {{CMD_ENV}} dotnet nuget push **/*.nupkg --api-key "$SECRETS_NUGETORG_API" --source https://api.nuget.org/v3/index.json {{args}}
+publish secret-api-key:
+    {{CMD_ENV}} dotnet nuget push **/*.nupkg --api-key "{{secret-api-key}}" --source https://api.nuget.org/v3/index.json
 
 ru: run-uiex
 run-uiex:
