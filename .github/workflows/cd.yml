@@ -24,13 +24,15 @@ jobs:
         run: just build Release -p:Version=${{ env.version }}
 
       - name: Publish
-        run: just publish ${{ secrets.NUGETORG_API }}
+        env:
+          NUGETORG_API: ${{ secrets.SECRETS_NUGETORG_API }}
+        run: just publish $NUGETORG_API
 
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ github.ref }}
-          release_name: Release ${{ env.version }}
+          name: Release ${{ env.version }}
           draft: false
           prerelease: false
           artifacts: "**/*.nupkg"
