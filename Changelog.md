@@ -11,6 +11,14 @@ This file present the software status in form of a "Changelog".
 This document is valid within the scope of the work for the project "Klab.Translations".
 It describes the status at delivery of the software by klab365. This document provides relevant information for all members of the project
 
+## [1.0.2](https://github.com/klab365/KlabTranslations/compare/v1.0.1...v1.0.2) (2026-10-11)
+
+
+### Bug Fixes
+
+* make Avalonia NuGet package self-contained ([c412953](https://github.com/klab365/KlabTranslations/commit/c4129535acce09cde79ea85cb27308bcd0ef3c7e))
+* package generator and core for Avalonia consumers ([a4dc98a](https://github.com/klab365/KlabTranslations/commit/a4dc98a7e519b1c4846159669a4287d0d4b2bec1))
+
 ## [1.0.1](https://github.com/klab365/KlabTranslations/compare/v1.0.0...v1.0.1) (2026-10-11)
 
 
