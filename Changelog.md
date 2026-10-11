@@ -11,6 +11,13 @@ This file present the software status in form of a "Changelog".
 This document is valid within the scope of the work for the project "Klab.Translations".
 It describes the status at delivery of the software by klab365. This document provides relevant information for all members of the project
 
+## [1.2.0](https://github.com/klab365/KlabTranslations/compare/v1.1.0...v1.2.0) (2026-10-11)
+
+
+### Features
+
+* bundle generator in framework adapters ([8f46be4](https://github.com/klab365/KlabTranslations/commit/8f46be41ad5bb65123593022c751b7431307ca94))
+
 ## [1.1.0](https://github.com/klab365/KlabTranslations/compare/v1.0.2...v1.1.0) (2026-10-11)
 
 
