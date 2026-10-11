@@ -1,4 +1,4 @@
-using KlabTranslations.Cli;
+﻿using KlabTranslations.Cli;
 using Xunit;
 
 namespace KlabTranslations.Cli.Tests;
