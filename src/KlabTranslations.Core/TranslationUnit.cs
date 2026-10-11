@@ -175,7 +175,13 @@ public sealed record TranslationUnit : IDisposable
             return Translations[matchingCulture];
         }
 
-        throw new KeyNotFoundException($"No translation found for culture '{culture.Name}' and key '{Key}'.");
+        // Fall back to the invariant-culture translation when available, then to the key itself.
+        if (Translations.TryGetValue(CultureInfo.InvariantCulture, out translation))
+        {
+            return translation;
+        }
+
+        return Key;
     }
 
     /// <inheritdoc/>

@@ -92,6 +92,34 @@ public sealed class TranslationUnitTests : IDisposable
     }
 
     [Fact]
+    public void OnCultureChanged_ShouldUseInvariantTranslationWhenSelectedCultureIsMissing()
+    {
+        Dictionary<CultureInfo, string> translations = new()
+        {
+            [CultureInfo.InvariantCulture] = "Default"
+        };
+        using TranslationUnit unit = new("greeting", translations);
+
+        TranslationProvider.SetCulture(new CultureInfo("es-ES"));
+
+        unit.CurrentValue.Should().Be("Default");
+    }
+
+    [Fact]
+    public void OnCultureChanged_ShouldUseKeyWhenCultureAndInvariantTranslationAreMissing()
+    {
+        Dictionary<string, string> translations = new()
+        {
+            ["en"] = "Hello"
+        };
+        using TranslationUnit unit = new("greeting", translations);
+
+        TranslationProvider.SetCulture(new CultureInfo("es-ES"));
+
+        unit.CurrentValue.Should().Be("greeting");
+    }
+
+    [Fact]
     public void OnCultureChanged_ShouldThrowWhenTranslationDoesNotExist()
     {
         // Arrange
@@ -104,8 +132,8 @@ public sealed class TranslationUnitTests : IDisposable
 
         // Act & Assert
         Action act = () => TranslationProvider.SetCulture(new CultureInfo("es-ES")); // Spanish not in translations
-        act.Should().Throw<KeyNotFoundException>()
-           .WithMessage("No translation found for culture 'es-ES' and key 'greeting'.");
+        act.Should().NotThrow();
+        unit.CurrentValue.Should().Be("greeting");
     }
 
     [Fact]
@@ -173,15 +201,14 @@ public sealed class TranslationUnitTests : IDisposable
     }
 
     [Fact]
-    public void Constructor_WithEmptyTranslations_ShouldThrow()
+    public void Constructor_WithEmptyTranslations_ShouldReturnKey()
     {
         // Arrange
         Dictionary<string, string> emptyTranslations = new();
 
         // Act & Assert
-        Func<TranslationUnit> act = () => new TranslationUnit("test-key", emptyTranslations);
-        act.Should().Throw<KeyNotFoundException>()
-           .WithMessage("No translation found for culture 'en-US' and key 'test-key'.");
+        using TranslationUnit unit = new("test-key", emptyTranslations);
+        unit.CurrentValue.Should().Be("test-key");
     }
 
     [Theory]
@@ -210,7 +237,7 @@ public sealed class TranslationUnitTests : IDisposable
     [InlineData("es")]
     [InlineData("it")]
     [InlineData("ru")]
-    public void OnCultureChanged_WithNonExistingCultures_ShouldThrow(string culture)
+    public void OnCultureChanged_WithNonExistingCultures_ShouldFallBackToKey(string culture)
     {
         // Arrange
         Dictionary<string, string> translations = new()
@@ -224,8 +251,8 @@ public sealed class TranslationUnitTests : IDisposable
 
         // Act & Assert
         Action act = () => TranslationProvider.SetCulture(new CultureInfo(culture));
-        act.Should().Throw<KeyNotFoundException>()
-           .WithMessage($"No translation found for culture '{culture}' and key 'greeting'.");
+        act.Should().NotThrow();
+        unit.CurrentValue.Should().Be("greeting");
     }
 
     [Fact]
