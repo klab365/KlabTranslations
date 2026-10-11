@@ -1,0 +1,39 @@
+@implements IDisposable
+@inject TranslationContext Context
+
+<span>@Value</span>
+
+@code {
+    /// <summary>The generated translation to display.</summary>
+    [Parameter, EditorRequired]
+    public TranslationUnit Unit { get; set; } = default!;
+
+    /// <summary>Optional named interpolation values to set on the translation unit.</summary>
+    [Parameter]
+    public IReadOnlyDictionary<string, object?>? Parameters { get; set; }
+
+    private TranslationUnit? _contextualUnit;
+
+    private string Value => _contextualUnit?.CurrentValue ?? Unit.Key;
+
+    protected override void OnInitialized() => Context.CultureChanged += OnCultureChanged;
+
+    protected override void OnParametersSet()
+    {
+        _contextualUnit?.Dispose();
+        _contextualUnit = Unit.CreateForContext(Context);
+        if (Parameters == null)
+            return;
+        foreach (KeyValuePair<string, object?> parameter in Parameters)
+            _contextualUnit.Parameters[parameter.Key] = parameter.Value;
+    }
+
+    private void OnCultureChanged(object? sender, System.Globalization.CultureInfo culture) =>
+        _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Context.CultureChanged -= OnCultureChanged;
+        _contextualUnit?.Dispose();
+    }
+}

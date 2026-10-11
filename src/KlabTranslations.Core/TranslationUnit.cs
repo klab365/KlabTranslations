@@ -11,6 +11,7 @@ public sealed record TranslationUnit : IDisposable
 {
     private readonly BehaviorSubject<string> _value;
     private readonly TranslationParameters _parameters;
+    private readonly TranslationContext? _context;
 
     /// <summary>
     /// Value stream that emits the current translation based on the active culture and parameters.
@@ -21,6 +22,16 @@ public sealed record TranslationUnit : IDisposable
     /// Gets the current translation value for the active culture with parameters resolved.
     /// </summary>
     public string CurrentValue => _value.Value;
+
+    /// <summary>Gets this translation resolved for an explicitly supplied culture.</summary>
+    public string GetValue(CultureInfo culture) => GetResolvedTranslation(culture);
+
+    /// <summary>Creates an independent translation unit bound to the supplied culture context.</summary>
+    public TranslationUnit CreateForContext(TranslationContext context) => new(
+        Key,
+        Translations.ToDictionary(entry => entry.Key, entry => entry.Value),
+        PluralTranslations.ToDictionary(entry => entry.Key, entry => new Dictionary<PluralCategory, string>(entry.Value)),
+        context);
 
     /// <summary>
     /// Gets the key identifying this translation unit.
@@ -52,15 +63,42 @@ public sealed record TranslationUnit : IDisposable
 
     /// <summary>Initializes a translation unit with culture-specific plural forms.</summary>
     public TranslationUnit(string key, Dictionary<CultureInfo, string> translations, Dictionary<CultureInfo, Dictionary<PluralCategory, string>> pluralTranslations)
+        : this(key, translations, pluralTranslations, null, false)
+    {
+    }
+
+    /// <summary>Initializes a translation unit that follows an independent culture context.</summary>
+    public TranslationUnit(string key, Dictionary<CultureInfo, string> translations, TranslationContext context)
+        : this(key, translations, new Dictionary<CultureInfo, Dictionary<PluralCategory, string>>(), context, true)
+    {
+    }
+
+    /// <summary>Initializes a translation unit from language codes and an independent culture context.</summary>
+    public TranslationUnit(string key, Dictionary<string, string> translations, TranslationContext context)
+        : this(key, ConvertStringDictionaryToCultureDictionary(translations), new Dictionary<CultureInfo, Dictionary<PluralCategory, string>>(), context, true)
+    {
+    }
+
+    /// <summary>Initializes a translation unit with plural forms and an independent culture context.</summary>
+    public TranslationUnit(string key, Dictionary<CultureInfo, string> translations, Dictionary<CultureInfo, Dictionary<PluralCategory, string>> pluralTranslations, TranslationContext context)
+        : this(key, translations, pluralTranslations, context, true)
+    {
+    }
+
+    private TranslationUnit(string key, Dictionary<CultureInfo, string> translations, Dictionary<CultureInfo, Dictionary<PluralCategory, string>> pluralTranslations, TranslationContext? context, bool useContext)
     {
         Key = key;
         Translations = translations;
         PluralTranslations = pluralTranslations;
+        _context = context;
         _parameters = new TranslationParameters();
-        _value = new BehaviorSubject<string>(GetResolvedTranslation(TranslationProvider.CurrentCulture));
+        CultureInfo initialCulture = useContext ? context!.CurrentCulture : TranslationProvider.CurrentCulture;
+        _value = new BehaviorSubject<string>(GetResolvedTranslation(initialCulture));
 
-        // Subscribe to culture changes
-        TranslationProvider.CultureChanged += OnCultureChanged;
+        if (useContext)
+            context!.CultureChanged += OnCultureChanged;
+        else
+            TranslationProvider.CultureChanged += OnCultureChanged;
 
         // Subscribe to parameter changes
         _parameters.ParametersChanged.Subscribe(_ => OnParametersChanged());
@@ -109,7 +147,7 @@ public sealed record TranslationUnit : IDisposable
 
     private void OnParametersChanged()
     {
-        string translation = GetResolvedTranslation(TranslationProvider.CurrentCulture);
+        string translation = GetResolvedTranslation(_context == null ? TranslationProvider.CurrentCulture : _context.CurrentCulture);
         _value.OnNext(translation);
     }
 
@@ -226,7 +264,10 @@ public sealed record TranslationUnit : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        TranslationProvider.CultureChanged -= OnCultureChanged;
+        if (_context == null)
+            TranslationProvider.CultureChanged -= OnCultureChanged;
+        else
+            _context.CultureChanged -= OnCultureChanged;
         _parameters.Dispose();
         _value.Dispose();
     }

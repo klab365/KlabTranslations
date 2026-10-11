@@ -42,6 +42,20 @@ For Avalonia projects, also add:
 </ItemGroup>
 ```
 
+For Blazor projects, add the adapter and register its scoped translation context:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="KlabTranslations.Generator.Blazor" Version="*" />
+</ItemGroup>
+```
+
+```csharp
+builder.Services.AddKlabTranslations();
+```
+
+Then render a generated translation in Razor with `<Translate Unit="Strings.hello_world" />`. The adapter's culture context is scoped per Blazor circuit, rather than using the global static culture provider.
+
 ### 2. Create Translations.csv
 
 Create a `Translations.csv` file in the project root with the following format:
@@ -87,6 +101,7 @@ string germanWelcome = Strings.welcome.ToString("de-DE");
 |---------|---------|-------|
 | **KlabTranslations.Generator** | C# source generator for CSV-based translations | [NuGet](https://www.nuget.org/packages/KlabTranslations.Generator/) |
 | **KlabTranslations.Generator.Avalonia** | XAML markup extension for Avalonia UI applications | [NuGet](https://www.nuget.org/packages/KlabTranslations.Generator.Avalonia/) |
+| **KlabTranslations.Generator.Blazor** | Scoped culture context and Razor translation component | [NuGet](https://www.nuget.org/packages/KlabTranslations.Generator.Blazor/) |
 
 ## 💡 Why CSV?
 
@@ -123,6 +138,7 @@ Complete working examples are available in the `samples/` directory:
 
 - [Console Example](samples/KlabTranslations.ConsoleExample/) - Basic console application
 - [Avalonia Example](samples/KlabTranslations.AvaloniaExample/) - Full Avalonia UI application
+- [Blazor Example](samples/KlabTranslations.BlazorExample/) - Blazor Server app with per-circuit culture
 
 ## 🛠️ Development
 
