@@ -50,7 +50,8 @@ public class Generator : IIncrementalGenerator
                 return;
             }
 
-            if (data == null) return;
+            if (data == null)
+                return;
 
             // Use the assembly name as the root namespace, or fall back to a default
             string rootNamespace = compilation.AssemblyName ?? "GeneratedTranslations";
@@ -171,11 +172,14 @@ public class Generator : IIncrementalGenerator
         HashSet<string> result = new();
         for (int i = 0; i < value.Length; i++)
         {
-            if (value[i] != '{') continue;
+            if (value[i] != '{')
+                continue;
             int end = value.IndexOf('}', i + 1);
-            if (end < 0) throw new CsvValidationException(line, "Unclosed format parameter.");
+            if (end < 0)
+                throw new CsvValidationException(line, "Unclosed format parameter.");
             string parameter = value.Substring(i + 1, end - i - 1).Trim();
-            if (parameter.Length == 0) throw new CsvValidationException(line, "Empty format parameter.");
+            if (parameter.Length == 0)
+                throw new CsvValidationException(line, "Empty format parameter.");
             result.Add(parameter);
         }
         return result;

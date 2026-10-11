@@ -1,7 +1,7 @@
+﻿using KlabTranslations.Generator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using KlabTranslations.Generator;
 
 namespace KlabTranslations.Generator.Tests;
 
