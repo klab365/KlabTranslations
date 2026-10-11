@@ -13,9 +13,9 @@ KlabTranslations generates strongly typed C# translation units from a CSV file a
 - The `KlabTranslations.Generator` NuGet package.
 - A file named exactly `Translations.csv` included as an MSBuild `AdditionalFiles` item.
 
-### 1. Add the generator
+### 1. Add the package
 
-Install `KlabTranslations.Generator` from NuGet, or add the package reference:
+For a plain .NET project, install `KlabTranslations.Generator` from NuGet, or add the package reference:
 
 ```xml
 <ItemGroup>
@@ -24,7 +24,7 @@ Install `KlabTranslations.Generator` from NuGet, or add the package reference:
 </ItemGroup>
 ```
 
-The source generator runs during compilation; no runtime CSV loading is required. The package supplies the core types used by generated code. Add an adapter only when using its framework integration.
+The source generator runs during compilation; no runtime CSV loading is required. The package supplies the core types used by generated code. For Avalonia or Blazor, use the matching adapter package instead of adding this package separately: both adapters include the source generator.
 
 ### 2. Create `Translations.csv`
 
@@ -91,7 +91,7 @@ Use `Resolve(...)` and supply parameters in placeholder order, starting at index
 
 ### Avalonia/Blazor markup cannot resolve the translation
 
-Ensure the matching adapter package is referenced in addition to the generator, and follow the sample's XML/Razor namespaces and service registration. Rebuild after changing package references.
+Ensure the matching adapter package is referenced and follow the sample's XML/Razor namespaces and service registration. The Avalonia and Blazor adapter packages include the source generator, so a separate generator package reference is not required. Rebuild after changing package references.
 
 ## Packages
 
