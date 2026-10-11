@@ -1,172 +1,115 @@
 # KlabTranslations
 
 [![CI](https://github.com/klab365/KlabTranslations/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/klab365/KlabTranslations/actions/workflows/ci.yml)
-
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=klab365_KlabTranslations&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=klab365_KlabTranslations)
 
-A modern, developer-friendly translation framework for .NET applications with support for multiple UI frameworks and strong compile-time type safety.
+KlabTranslations generates strongly typed C# translation units from a CSV file at build time. The generated API can be used from ordinary .NET code or through the optional Avalonia and Blazor adapters.
 
-## 🎯 Overview
+## Getting started
 
-KlabTranslations is a comprehensive translation framework designed for .NET applications. It provides:
+### Requirements
 
-- **CSV-based translation management** - Simple, spreadsheet-friendly format
-- **Source code generation** - Compile-time type safety for translation keys
-- **Multi-framework support** - Console, ASP.NET, WPF, Avalonia, and more
-- **Parameter support** - Handle dynamic values in translations
-- **Framework adapters** - Native integration with popular UI frameworks
+- A .NET project (the repository currently targets the .NET SDK version declared in `global.json`/`mise.toml`; see the project files if targeting a different SDK).
+- The `KlabTranslations.Generator` NuGet package.
+- A file named exactly `Translations.csv` included as an MSBuild `AdditionalFiles` item.
 
-## 🚀 Quick Start
+### 1. Add the generator
 
-### 1. Install Package
-
-The `KlabTranslations.Generator` package can not work alone, it requires at least one adapter package to function.
-Edit your `.csproj` file to add the package references:
+Install `KlabTranslations.Generator` from NuGet, or add the package reference:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="KlabTranslations.Generator" Version="*" />
-</ItemGroup>
-
-<!-- Include CSV file as AdditionalFiles so the generator can read it -->
-<ItemGroup>
+  <PackageReference Include="KlabTranslations.Generator" Version="<current-version>" />
   <AdditionalFiles Include="Translations.csv" />
 </ItemGroup>
 ```
 
-For Avalonia projects, also add:
+The source generator runs during compilation; no runtime CSV loading is required. The package supplies the core types used by generated code. Add an adapter only when using its framework integration.
 
-```xml
-<ItemGroup>
-  <PackageReference Include="KlabTranslations.Generator.Avalonia" Version="*" />
-</ItemGroup>
-```
-
-For Blazor projects, add the adapter and register its scoped translation context:
-
-```xml
-<ItemGroup>
-  <PackageReference Include="KlabTranslations.Generator.Blazor" Version="*" />
-</ItemGroup>
-```
-
-```csharp
-builder.Services.AddKlabTranslations();
-```
-
-Then render a generated translation in Razor with `<Translate Unit="Strings.hello_world" />`. The adapter's culture context is scoped per Blazor circuit, rather than using the global static culture provider.
-
-### 2. Create Translations.csv
-
-Create a `Translations.csv` file in the project root with the following format:
-
-- Header row:
+### 2. Create `Translations.csv`
 
 ```csv
 Key,de-DE,en-US
-hello_world,Hallo Welt,Hello World
-goodbye,Auf Wiedersehen,Goodbye
-welcome,Willkommen,Welcome
-thank_you,Danke,Thank you
-welcome_user,Willkommen {0}!,Welcome {0}!
-user_info,{0} ist {1} Jahre alt,{0} is {1} years old
-message_count,Sie haben {0} Nachrichten,You have {0} messages
+hello_world,Hallo Welt,Hello world
+welcome_user,"Willkommen, {0}!","Welcome, {0}!"
 ```
 
-### 3. Use Generated Translations
+The first column must be `Key`; every other header is a culture name such as `de-DE` or `en-US`. Each data row must have a unique, non-empty key and one value per language column. Quote CSV fields containing commas and escape quotes using standard CSV double-quote escaping.
 
-When a selected culture has no translation, KlabTranslations tries the matching parent/language translation first, then a translation stored under the invariant culture (the default), and finally returns the translation key itself. Thus a missing language or a missing value never causes lookup to throw.
+Plural forms can be expressed by adding a category to a culture column, for example `en-US.one` and `en-US.other`. Supported categories are `zero`, `one`, `two`, `few`, `many`, and `other`.
 
-The generated class `Strings` can be found in your `namespace.Translations`:
+### 3. Use the generated API
+
+The generator creates `Strings` in `<AssemblyName>.Translations` (normally your project's root namespace plus `.Translations`). For example, if the assembly name is `MyApp`:
 
 ```csharp
-using YourNamespace.Translations;
+using MyApp.Translations;
 
-// Type-safe translation access
-string welcome = Strings.welcome.ToString();
-
-// With parameters
-string greeting = Strings.welcome_user.Resolve(new[] { userName });
-string info = Strings.user_info.Resolve(new[] { userName, age });
-
-// Access by culture
-string germanWelcome = Strings.welcome.ToString("de-DE");
+string text = Strings.hello_world.ToString();
+string german = Strings.hello_world.ToString("de-DE");
+string greeting = Strings.welcome_user.Resolve(new object?[] { "Ada" });
 ```
 
-## 📦 Packages
+Use your actual assembly name in the `using` directive. Generated source is produced during build and may not appear in the source tree until the project has compiled.
 
-### Available Packages
+For an end-to-end runnable example, see [the console sample](samples/KlabTranslations.ConsoleExample/). Avalonia and Blazor examples are in `samples/` as well.
 
-| Package | Purpose | NuGet |
-|---------|---------|-------|
-| **KlabTranslations.Generator** | C# source generator for CSV-based translations | [NuGet](https://www.nuget.org/packages/KlabTranslations.Generator/) |
-| **KlabTranslations.Generator.Avalonia** | XAML markup extension for Avalonia UI applications | [NuGet](https://www.nuget.org/packages/KlabTranslations.Generator.Avalonia/) |
-| **KlabTranslations.Generator.Blazor** | Scoped culture context and Razor translation component | [NuGet](https://www.nuget.org/packages/KlabTranslations.Generator.Blazor/) |
+## Culture and fallback
 
-## 💡 Why CSV?
+Lookups use the requested/current culture, then its parent culture where available, then the invariant/default translation, and finally the key itself. An absent translation therefore does not fail lookup. For parameterized strings, provide values matching the `{0}`, `{1}`, … placeholders.
 
-We chose CSV as our translation format because:
+## Framework adapters
 
-- **Simplicity**: Easy to read and write with minimal learning curve
-- **Accessibility**: Open in Microsoft Excel, Google Sheets, or any text editor
-- **Translator-Friendly**: Non-technical translators can work in familiar spreadsheet tools
-- **Version Control**: Clean diff views when using Git
-- **Tool Support**: Universal support across all platforms and operating systems
+- **Avalonia:** reference `KlabTranslations.Generator.Avalonia`; it includes the source generator. See [the Avalonia sample](samples/KlabTranslations.AvaloniaExample/).
+- **Blazor:** reference `KlabTranslations.Generator.Blazor`; it includes the source generator. Register the service with `builder.Services.AddKlabTranslations()` and use `<Translate Unit="Strings.hello_world" />`. Culture state is scoped to the Blazor circuit. See [the Blazor sample](samples/KlabTranslations.BlazorExample/).
 
-## 🎨 Framework Integration
+## FAQ / common stumbling blocks
 
-### Avalonia UI
+### No `Strings` class or generated translations
 
-Use the `Translate` markup extension directly in XAML:
+Check that the file is named exactly `Translations.csv`, is included as an `<AdditionalFiles>` item in the project that compiles it, and has content. Then rebuild. The generator searches for that filename; a differently named CSV is not picked up.
 
-```axaml
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:klab="using:KlabTranslations.Generator.Avalonia"
-        xmlns:translations="using:KlabTranslations.AvaloniaExample.Translations">
-  <TextBlock Text="{klab:Translate {x:Static translations:Strings.welcome}}" />
-  <TextBlock Text="{klab:Translate {x:Static translations:Strings.welcome_user}, Param0='Test123'}" />
-  <TextBlock Text="{klab:Translate {x:Static translations:Strings.welcome_user}, Param0={Binding UserName}}" />
-</Window>
-```
+### `Strings` is in a different namespace than expected
 
-In the example is shown how to use the `Translate` markup extension to bind translated strings directly in XAML, including parameterized translations.
-The parameters can be bound to view model properties or static values
+The generated namespace is based on the assembly name, followed by `.Translations`. Check `<AssemblyName>` in your `.csproj` and adjust the `using` statement accordingly.
 
-## 📋 Examples
+### Build fails with a CSV diagnostic
 
-Complete working examples are available in the `samples/` directory:
+The header must start with `Key`, have at least one non-empty language column, and contain no duplicate column names. Every row must have the same number of fields, unique non-empty keys, and valid plural category suffixes. Inspect the diagnostic for the file and line.
 
-- [Console Example](samples/KlabTranslations.ConsoleExample/) - Basic console application
-- [Avalonia Example](samples/KlabTranslations.AvaloniaExample/) - Full Avalonia UI application
-- [Blazor Example](samples/KlabTranslations.BlazorExample/) - Blazor Server app with per-circuit culture
+### A value containing a comma breaks the CSV
 
-## 🛠️ Development
+Wrap the field in double quotes, e.g. `hello,"Hallo, Welt"`. A literal double quote inside a quoted field must be doubled (`""`).
 
-Development commands are available through mise:
+### Translation shows the key or another language
+
+Verify the culture name/header and that the requested culture is set as expected. Missing entries fall back through the parent culture, then the invariant value, and ultimately the key. An empty/missing value is not a translated string.
+
+### Parameter placeholders are not replaced
+
+Use `Resolve(...)` and supply parameters in placeholder order, starting at index 0. Check that the number and types of supplied values are appropriate for the format string.
+
+### Avalonia/Blazor markup cannot resolve the translation
+
+Ensure the matching adapter package is referenced in addition to the generator, and follow the sample's XML/Razor namespaces and service registration. Rebuild after changing package references.
+
+## Packages
+
+| Package | Purpose |
+|---|---|
+| `KlabTranslations.Generator` | CSV source generator and core translation API |
+| `KlabTranslations.Generator.Avalonia` | Avalonia XAML markup integration |
+| `KlabTranslations.Generator.Blazor` | Blazor translation component and scoped culture context |
+
+## Repository development
+
+The repository uses `mise.toml` for tool versions and tasks. Install the configured tools and restore dependencies, then run:
 
 ```bash
-mise install                 # Install project tools and restore dependencies
-mise run build               # Build all projects
-mise run test                # Run tests and collect coverage
-mise run check-format        # Verify formatting
-mise run clean                # Clean build artifacts
+mise install
+mise run build
+mise run test
+mise run check-format
 ```
 
-## 🔧 Architecture
-
-KlabTranslations uses a modular architecture:
-
-1. **Generator** - Reads `Translations.csv` at compile-time
-2. **Code Generation** - Creates strongly-typed `Translations` class
-3. **Core Library** - Provides `TranslationUnit` and parameter resolution
-4. **Framework Adapters** - Integrate translations with specific UI frameworks
-
-This approach ensures:
-- ✅ Compile-time type safety
-- ✅ Zero runtime overhead for static translations
-- ✅ Developer-friendly API
-- ✅ Easy maintenance
-
-## 🆘 Support
-
-For issues, questions, or feature requests, please open an issue in the repository.
+Runnable samples are under `samples/`; source projects and tests are under `src/`. For issues or feature requests, open a GitHub issue.
