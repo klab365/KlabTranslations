@@ -1,5 +1,9 @@
-Key,de-DE,en-US
-hello_world,Hallo Welt,Hello World
-goodbye,Auf Wiedersehen,Goodbye
-welcome,Willkommen,Welcome
-thank_you,Danke,Thank you
+Key,de-DE,en-US,en-US.one,en-US.other
+hello_world,Hallo Welt,Hello World,,
+
+goodbye,Auf Wiedersehen,Goodbye,,
+
+welcome,Willkommen,Welcome,,
+
+thank_you,Danke,Thank you,,
+message_count,{count} Nachrichten,{count} messages,{count} message,{count} messages

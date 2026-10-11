@@ -32,6 +32,9 @@ public sealed record TranslationUnit : IDisposable
     /// </summary>
     public IReadOnlyDictionary<CultureInfo, string> Translations { get; }
 
+    /// <summary>Plural translations indexed by culture and plural category.</summary>
+    public IReadOnlyDictionary<CultureInfo, Dictionary<PluralCategory, string>> PluralTranslations { get; }
+
     /// <summary>
     /// Gets the parameters collection for this translation unit.
     /// Use this to set indexed parameters like: unit.Parameters[0] = "value"
@@ -43,9 +46,16 @@ public sealed record TranslationUnit : IDisposable
     /// Initializes a new instance of the <see cref="TranslationUnit"/> class.
     /// </summary>
     public TranslationUnit(string key, Dictionary<CultureInfo, string> translations)
+        : this(key, translations, new Dictionary<CultureInfo, Dictionary<PluralCategory, string>>())
+    {
+    }
+
+    /// <summary>Initializes a translation unit with culture-specific plural forms.</summary>
+    public TranslationUnit(string key, Dictionary<CultureInfo, string> translations, Dictionary<CultureInfo, Dictionary<PluralCategory, string>> pluralTranslations)
     {
         Key = key;
         Translations = translations;
+        PluralTranslations = pluralTranslations;
         _parameters = new TranslationParameters();
         _value = new BehaviorSubject<string>(GetResolvedTranslation(TranslationProvider.CurrentCulture));
 
@@ -63,6 +73,12 @@ public sealed record TranslationUnit : IDisposable
         string key,
         Dictionary<string, string> translations)
         : this(key, ConvertStringDictionaryToCultureDictionary(translations))
+    {
+    }
+
+    /// <summary>Initializes a translation unit from language-code translations and plural forms.</summary>
+    public TranslationUnit(string key, Dictionary<string, string> translations, Dictionary<CultureInfo, Dictionary<PluralCategory, string>> pluralTranslations)
+        : this(key, ConvertStringDictionaryToCultureDictionary(translations), pluralTranslations)
     {
     }
 
@@ -100,6 +116,13 @@ public sealed record TranslationUnit : IDisposable
     private string GetResolvedTranslation(CultureInfo culture)
     {
         string baseTranslation = GetTranslationForCulture(culture);
+        if (_parameters.NamedParameterCount > 0 && _parameters.GetNamedParametersDictionary().TryGetValue("count", out object? countValue) &&
+            countValue != null && TryConvertCount(countValue, out decimal count))
+        {
+            Dictionary<PluralCategory, string>? forms = GetPluralForms(culture);
+            if (forms != null && (forms.TryGetValue(PluralRules.GetCategory(culture, count), out string? plural) || forms.TryGetValue(PluralCategory.Other, out plural)))
+                baseTranslation = plural;
+        }
 
         // If no parameters are set, return the base translation
         if (!_parameters.HasParameters)
@@ -122,7 +145,7 @@ public sealed record TranslationUnit : IDisposable
                 HashSet<string> namedParamNames = ParameterResolver.GetNamedParameterNames(baseTranslation);
 
                 // Check if all required named parameters are available
-                if (namedParamNames.All(name => namedParams.ContainsKey(name)))
+                if (namedParamNames.Count > 0 && namedParamNames.All(name => namedParams.ContainsKey(name)))
                 {
                     return ParameterResolver.ResolveNamedParameters(baseTranslation, namedParams);
                 }
@@ -149,6 +172,22 @@ public sealed record TranslationUnit : IDisposable
             // If parameter resolution fails, return the base translation
             return baseTranslation;
         }
+    }
+
+    private static bool TryConvertCount(object value, out decimal count)
+    {
+        try
+        { count = Convert.ToDecimal(value, CultureInfo.InvariantCulture); return true; }
+        catch (Exception exception) when (exception is FormatException or InvalidCastException or OverflowException) { count = 0; return false; }
+    }
+
+    private Dictionary<PluralCategory, string>? GetPluralForms(CultureInfo culture)
+    {
+        if (PluralTranslations.TryGetValue(culture, out Dictionary<PluralCategory, string>? forms))
+            return forms;
+        if (!culture.IsNeutralCulture && PluralTranslations.TryGetValue(culture.Parent, out forms))
+            return forms;
+        return PluralTranslations.FirstOrDefault(x => x.Key.TwoLetterISOLanguageName == culture.TwoLetterISOLanguageName).Value;
     }
 
     private string GetTranslationForCulture(CultureInfo culture)

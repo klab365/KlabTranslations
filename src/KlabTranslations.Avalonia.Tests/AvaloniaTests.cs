@@ -126,6 +126,18 @@ public sealed class AvaloniaTests : IDisposable
     }
 
     [AvaloniaFact]
+    public void TranslateMarkupExtension_WithCountBinding_ShouldSelectPluralForm()
+    {
+        MainWindowViewModel viewModel = new() { MessageCount = 1 };
+        MainWindow window = new() { DataContext = viewModel };
+        window.Show();
+
+        window.BoundMessageCountTextBlock.Text.Should().Be("You have 1 message");
+        viewModel.MessageCount = 2;
+        window.BoundMessageCountTextBlock.Text.Should().Be("You have 2 messages");
+    }
+
+    [AvaloniaFact]
     public void TranslateMarkupExtension_WithIntParameterBinding_ShouldUpdateWhenParameterChanges()
     {
         // arrange
