@@ -54,7 +54,8 @@ public static class TranslationChecker
                     errors.Add($"Line {line}: duplicate translation key '{key}'.");
 
                 for (int column = 1; column < row.Length; column++)
-                    if (!string.IsNullOrWhiteSpace(row[column])) populated[column - 1]++;
+                    if (!string.IsNullOrWhiteSpace(row[column]))
+                        populated[column - 1]++;
             }
 
             if (keys.Count == 0)
@@ -100,11 +101,13 @@ public static class TranslationChecker
             {
                 field.Append('"');
                 text = text.Remove(i + 1, 1);
+                continue;
             }
-            else if (quoted && c == '"')
-                quoted = false;
-            else if (!quoted && c == '"')
-                quoted = true;
+            else if (c == '"')
+            {
+                quoted = !quoted;
+                continue;
+            }
             else if (c == ',' && !quoted)
             {
                 record.Add(field.ToString().Trim());
@@ -116,13 +119,15 @@ public static class TranslationChecker
                     continue;
                 record.Add(field.ToString().Trim());
                 field.Clear();
-                if (record.Any(value => value.Length > 0)) records.Add(record.ToArray());
+                if (record.Any(value => value.Length > 0))
+                    records.Add(record.ToArray());
                 record.Clear();
             }
             else
                 field.Append(c);
         }
-        if (quoted) throw new FormatException("Unclosed quoted field.");
+        if (quoted)
+            throw new FormatException("Unclosed quoted field.");
         if (field.Length > 0 || record.Count > 0)
         {
             record.Add(field.ToString().Trim());
