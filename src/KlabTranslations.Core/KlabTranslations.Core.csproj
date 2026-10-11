@@ -1,9 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <IsPackable>false</IsPackable>
+    <IsPackable>true</IsPackable>
+    <PackageId>KlabTranslations.Core</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="../../Readme.md" Pack="true" PackagePath="/" />
     <PackageReference Include="System.Reactive" />
   </ItemGroup>
 
