@@ -85,8 +85,23 @@ public class Generator : IIncrementalGenerator
             }
 
             translationDictSb.Append("        }");
+            StringBuilder pluralDictSb = new();
+            pluralDictSb.AppendLine("new Dictionary<System.Globalization.CultureInfo, Dictionary<KlabTranslations.Core.PluralCategory, string>>()");
+            pluralDictSb.AppendLine("        {");
+            foreach (IGrouping<string, KeyValuePair<string, string>> group in entry.Translations.Where(kvp => kvp.Key.Contains('.') && !string.IsNullOrEmpty(kvp.Value)).GroupBy(kvp => kvp.Key.Substring(0, kvp.Key.LastIndexOf('.'))))
+            {
+                pluralDictSb.AppendLine($"            [new System.Globalization.CultureInfo(\"{group.Key}\")] = new Dictionary<KlabTranslations.Core.PluralCategory, string>");
+                pluralDictSb.AppendLine("            {");
+                foreach (KeyValuePair<string, string> form in group)
+                {
+                    string category = char.ToUpperInvariant(form.Key[form.Key.LastIndexOf('.') + 1]) + form.Key.Substring(form.Key.LastIndexOf('.') + 2).ToLowerInvariant();
+                    pluralDictSb.AppendLine($"                [KlabTranslations.Core.PluralCategory.{category}] = \"{form.Value.Replace("\\", "\\\\").Replace("\"", "\\\"")}\",");
+                }
+                pluralDictSb.AppendLine("            },");
+            }
+            pluralDictSb.Append("        }");
             sb.AppendLine($"    public static KlabTranslations.Core.TranslationUnit {entry.Key} =>");
-            sb.AppendLine($"        new(\"{entry.Key}\", {translationDictSb});");
+            sb.AppendLine($"        new(\"{entry.Key}\", {translationDictSb}, {pluralDictSb});");
             sb.AppendLine();
         }
 
@@ -114,6 +129,12 @@ public class Generator : IIncrementalGenerator
             throw new CsvValidationException(lines[0].Number, "Header must contain 'Key' and at least one language column.");
         if (headers.Distinct().Count() != headers.Count)
             throw new CsvValidationException(lines[0].Number, "Duplicate column name.");
+        foreach (string header in headers.Skip(1))
+        {
+            int separator = header.LastIndexOf('.');
+            if (separator >= 0 && !new[] { "zero", "one", "two", "few", "many", "other" }.Contains(header.Substring(separator + 1), StringComparer.OrdinalIgnoreCase))
+                throw new CsvValidationException(lines[0].Number, $"Invalid plural category in column '{header}'.");
+        }
 
         // Extract language columns (skip the first "Key" column)
         List<string> languages = headers.Skip(1).ToList();
@@ -159,7 +180,11 @@ public class Generator : IIncrementalGenerator
         {
             for (int i = 1; i < headers.Count; i++)
             {
-                HashSet<string> parameters = ExtractParameters(entry.Translations[headers[i]], lines[entries.IndexOf(entry) + 1].Number);
+                string header = headers[i];
+                string value = entry.Translations[header];
+                if (header.Contains('.') && string.IsNullOrEmpty(value))
+                    continue;
+                HashSet<string> parameters = ExtractParameters(value, lines[entries.IndexOf(entry) + 1].Number);
                 if (expected.TryGetValue(entry.Key, out HashSet<string>? baseline) && !baseline.SetEquals(parameters))
                     throw new CsvValidationException(lines[entries.IndexOf(entry) + 1].Number, $"Format parameters for '{entry.Key}' do not match between languages.");
                 expected[entry.Key] = parameters;

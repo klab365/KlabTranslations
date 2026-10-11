@@ -40,11 +40,13 @@ internal class ParameterizedTranslationConverter : IMultiValueConverter
             if (values[i] != null && values[i] is not BindingNotification)
             {
                 _unit.Parameters[paramIndex] = values[i];
+                if (paramIndex == 0 && _unit.PluralTranslations.Count > 0)
+                    _unit.Parameters["count"] = values[i];
             }
         }
 
-        // The last value is the translation unit's current value (from the observable binding)
-        // Return it directly - it's already the translated string
-        return values[values.Count - 1];
+        // Setting parameters synchronously updates the unit. The observable value in this
+        // MultiBinding may still be stale during a re-entrant converter call.
+        return _unit.CurrentValue;
     }
 }

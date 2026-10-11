@@ -31,6 +31,65 @@ public sealed class TranslationUnitTests : IDisposable
         return unit;
     }
 
+    [Theory]
+    [InlineData("fr", 0, PluralCategory.One)]
+    [InlineData("fr", 2, PluralCategory.Other)]
+    [InlineData("ru", 1, PluralCategory.One)]
+    [InlineData("ru", 2, PluralCategory.Few)]
+    [InlineData("ru", 5, PluralCategory.Many)]
+    [InlineData("ru", 1.5, PluralCategory.Other)]
+    [InlineData("ar", 0, PluralCategory.Zero)]
+    [InlineData("ar", 1, PluralCategory.One)]
+    [InlineData("ar", 2, PluralCategory.Two)]
+    [InlineData("ar", 5, PluralCategory.Few)]
+    [InlineData("ar", 15, PluralCategory.Many)]
+    [InlineData("en", 1, PluralCategory.One)]
+    [InlineData("en", 2, PluralCategory.Other)]
+    public void PluralRules_ShouldResolveCategoriesByCulture(string cultureName, decimal count, PluralCategory expected)
+    {
+        PluralRules.GetCategory(new CultureInfo(cultureName), count).Should().Be(expected);
+    }
+
+    [Fact]
+    public void PluralRules_ShouldRejectNullCulture()
+    {
+        Action act = () => PluralRules.GetCategory(null!, 1);
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void NamedCountParameter_ShouldSelectCultureSpecificPluralForm()
+    {
+        Dictionary<CultureInfo, string> translations = new()
+        {
+            [new CultureInfo("en")] = "{count} messages",
+            [new CultureInfo("ru")] = "{count} сообщений"
+        };
+        Dictionary<CultureInfo, Dictionary<PluralCategory, string>> plurals = new()
+        {
+            [new CultureInfo("en")] = new()
+            {
+                [PluralCategory.One] = "{count} message",
+                [PluralCategory.Other] = "{count} messages"
+            },
+            [new CultureInfo("ru")] = new()
+            {
+                [PluralCategory.One] = "{count} сообщение",
+                [PluralCategory.Few] = "{count} сообщения",
+                [PluralCategory.Many] = "{count} сообщений",
+                [PluralCategory.Other] = "{count} сообщения"
+            }
+        };
+        using TranslationUnit unit = new("message_count", translations, plurals);
+        unit.Parameters["count"] = 1;
+        unit.CurrentValue.Should().Be("1 message");
+        unit.Parameters["count"] = 5;
+        unit.CurrentValue.Should().Be("5 messages");
+        TranslationProvider.SetCulture(new CultureInfo("ru-RU"));
+        unit.Parameters["count"] = 2;
+        unit.CurrentValue.Should().Be("2 сообщения");
+    }
+
     [Fact]
     public void Constructor_ShouldInitializeWithTranslationForCurrentCulture()
     {
