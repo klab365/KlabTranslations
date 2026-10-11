@@ -3,12 +3,12 @@
 ## Project
 - KlabTranslations is a .NET solution. Shared build, package, analyzer, and test settings are in `Directory.Build.props`.
 - Source projects are under `src/`; runnable examples are under `samples/`.
-- Use the `Justfile` as the canonical entry point for development commands.
+- Use `mise.toml` as the canonical entry point for tool versions and development tasks.
 
 ## Development and validation
-- `just build` builds the solution.
-- `just test` runs the test suite.
-- `just check-format` verifies formatting.
+- `mise run build` builds the solution.
+- `mise run test` runs the test suite and collects coverage.
+- `mise run check-format` verifies formatting.
 - Keep nullable reference types and warnings-as-errors in mind; do not suppress diagnostics without a clear reason.
 
 ## Releases

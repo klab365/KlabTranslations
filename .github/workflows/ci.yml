@@ -12,16 +12,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: extractions/setup-just@v3
-
-      - name: Build Docker CI image
-        run: just build-ci-docker $(id -u)
+      - uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+          experimental: true
 
       - name: Build (for source generators)
-        run: just build
+        run: mise run build
 
       - name: Check Format
-        run: just check-format
+        run: mise run check-format
 
   test-static_analysis:
     runs-on: ubuntu-latest
@@ -32,16 +33,17 @@ jobs:
           # Disabling shallow clones is recommended for improving the relevancy of reporting
           fetch-depth: 0
 
-      - uses: extractions/setup-just@v3
-
-      - name: Build Docker CI image
-        run: just build-ci-docker $(id -u)
+      - uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+          experimental: true
 
       - name: Build (for source generators)
-        run: just build
+        run: mise run build
 
       - name: Test
-        run: just test tmp
+        run: mise run test --output ./tmp
 
       - name: SonarQubeScan
         uses: SonarSource/sonarqube-scan-action@v6.0.0

@@ -50,7 +50,7 @@
 
   <!-- Test projects -->
   <PropertyGroup Condition="$(MSBuildProjectName.Contains('Tests'))">
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
 

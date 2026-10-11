@@ -35,13 +35,14 @@ jobs:
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
 
-      - uses: extractions/setup-just@v3
-
-      - name: Build Docker CI image
-        run: just build-ci-docker $(id -u)
+      - uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+          experimental: true
 
       - name: Build and pack
-        run: just build Release -p:Version=${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}.${{ needs.release-please.outputs.patch }}
+        run: mise run build Release -p:Version=${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}.${{ needs.release-please.outputs.patch }}
 
       - name: NuGet login
         id: login
