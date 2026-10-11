@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -13,6 +12,12 @@ namespace KlabTranslations.Generator;
 [Generator]
 public class Generator : IIncrementalGenerator
 {
+#pragma warning disable RS2008
+    private static readonly DiagnosticDescriptor InvalidCsv = new(
+        "KLT001", "Invalid translation CSV", "{0}", "KlabTranslations", DiagnosticSeverity.Error, true,
+        customTags: WellKnownDiagnosticTags.NotConfigurable);
+#pragma warning restore RS2008
+
     /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -22,25 +27,31 @@ public class Generator : IIncrementalGenerator
             .Where(file => file.Path.EndsWith("Translations.csv"));
 
         // Parse CSV file
-        IncrementalValuesProvider<TranslationData?> translationData = csvFiles.Select((file, cancellationToken) =>
+        IncrementalValuesProvider<(AdditionalText File, TranslationData? Data, string? Error)> translationData = csvFiles.Select((file, cancellationToken) =>
         {
-            string? content = file.GetText(cancellationToken)?.ToString();
-            if (string.IsNullOrEmpty(content))
+            try
             {
-                return null;
+                string? content = file.GetText(cancellationToken)?.ToString();
+                return (file, string.IsNullOrWhiteSpace(content) ? null : ParseCsv(content!), (string?)null);
             }
-
-            return ParseCsv(content!);
+            catch (CsvValidationException exception)
+            {
+                return (file, (TranslationData?)null, exception.Message);
+            }
         });
 
         // Generate code
         context.RegisterSourceOutput(translationData.Combine(context.CompilationProvider), (spc, combined) =>
         {
-            (TranslationData? data, Compilation compilation) = combined;
-            if (data == null)
+            ((AdditionalText file, TranslationData? data, string? error), Compilation compilation) = combined;
+            if (error != null)
             {
+                spc.ReportDiagnostic(Diagnostic.Create(InvalidCsv, Location.None, $"{file.Path}: {error}"));
                 return;
             }
+
+            if (data == null)
+                return;
 
             // Use the assembly name as the root namespace, or fall back to a default
             string rootNamespace = compilation.AssemblyName ?? "GeneratedTranslations";
@@ -86,17 +97,23 @@ public class Generator : IIncrementalGenerator
 
     private static TranslationData ParseCsv(string content)
     {
-        List<string> lines = [.. content.Split('\n')
-            .Select(line => line.Trim('\r', '\n'))
-            .Where(line => !string.IsNullOrWhiteSpace(line))];
+        string[] allLines = content.Split('\n');
+        List<(string Text, int Number)> lines = allLines
+            .Select((line, index) => (line.Trim('\r', '\n'), index + 1))
+            .Where(line => !string.IsNullOrWhiteSpace(line.Item1))
+            .ToList();
 
         if (lines.Count < 2)
         {
-            throw new InvalidDataException("CSV content must have at least a header and one data row.");
+            throw new CsvValidationException(1, "CSV must have a header and at least one data row.");
         }
 
         // First line is the header (Key, de, en, etc.)
-        List<string> headers = ParseCsvLine(lines[0]);
+        List<string> headers = ParseCsvLine(lines[0].Text);
+        if (headers.Count < 2 || headers[0] != "Key" || headers.Skip(1).Any(string.IsNullOrWhiteSpace))
+            throw new CsvValidationException(lines[0].Number, "Header must contain 'Key' and at least one language column.");
+        if (headers.Distinct().Count() != headers.Count)
+            throw new CsvValidationException(lines[0].Number, "Duplicate column name.");
 
         // Extract language columns (skip the first "Key" column)
         List<string> languages = headers.Skip(1).ToList();
@@ -106,13 +123,19 @@ public class Generator : IIncrementalGenerator
         // Parse data rows (beginning from the second line)
         for (int i = 1; i < lines.Count; i++)
         {
-            List<string> values = ParseCsvLine(lines[i]);
+            List<string> values = ParseCsvLine(lines[i].Text);
+            if (values.Count != headers.Count)
+                throw new CsvValidationException(lines[i].Number, $"Expected {headers.Count} columns but found {values.Count}.");
+            if (string.IsNullOrWhiteSpace(values[0]))
+                throw new CsvValidationException(lines[i].Number, "Translation key cannot be empty.");
             if (values.Count < 1)
             {
                 continue;
             }
 
             string key = values[0];
+            if (entries.Any(entry => entry.Key == key))
+                throw new CsvValidationException(lines[i].Number, $"Duplicate translation key '{key}'.");
             Dictionary<string, string> translations = [];
 
             for (int j = 1; j < values.Count && j < headers.Count; j++)
@@ -125,7 +148,48 @@ public class Generator : IIncrementalGenerator
             entries.Add(new TranslationEntry(key, translations));
         }
 
+        ValidateFormatParameters(entries, headers, lines);
         return new TranslationData(languages, entries);
+    }
+
+    private static void ValidateFormatParameters(List<TranslationEntry> entries, List<string> headers, List<(string Text, int Number)> lines)
+    {
+        Dictionary<string, HashSet<string>> expected = new();
+        foreach (TranslationEntry entry in entries)
+        {
+            for (int i = 1; i < headers.Count; i++)
+            {
+                HashSet<string> parameters = ExtractParameters(entry.Translations[headers[i]], lines[entries.IndexOf(entry) + 1].Number);
+                if (expected.TryGetValue(entry.Key, out HashSet<string>? baseline) && !baseline.SetEquals(parameters))
+                    throw new CsvValidationException(lines[entries.IndexOf(entry) + 1].Number, $"Format parameters for '{entry.Key}' do not match between languages.");
+                expected[entry.Key] = parameters;
+            }
+        }
+    }
+
+    private static HashSet<string> ExtractParameters(string value, int line)
+    {
+        HashSet<string> result = new();
+        for (int i = 0; i < value.Length; i++)
+        {
+            if (value[i] != '{')
+                continue;
+            int end = value.IndexOf('}', i + 1);
+            if (end < 0)
+                throw new CsvValidationException(line, "Unclosed format parameter.");
+            string parameter = value.Substring(i + 1, end - i - 1).Trim();
+            if (parameter.Length == 0)
+                throw new CsvValidationException(line, "Empty format parameter.");
+            result.Add(parameter);
+        }
+        return result;
+    }
+
+    /// <summary>Represents invalid translation CSV input.</summary>
+    public sealed class CsvValidationException : System.Exception
+    {
+        /// <summary>Creates a CSV validation exception.</summary>
+        public CsvValidationException(int line, string message) : base($"Line {line}: {message}") { }
     }
 
     private static List<string> ParseCsvLine(string line)
