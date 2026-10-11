@@ -3,7 +3,8 @@
 namespace KlabTranslations.Core;
 
 /// <summary>
-/// Provides culture management for translations.
+/// Provides application-wide culture management for backwards compatibility.
+/// Prefer <see cref="TranslationContext"/> for user- or scope-specific cultures.
 /// </summary>
 public static class TranslationProvider
 {

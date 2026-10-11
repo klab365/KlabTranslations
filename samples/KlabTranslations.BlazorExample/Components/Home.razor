@@ -1,0 +1,25 @@
+@page "/"
+@using System.Globalization
+@using KlabTranslations.BlazorExample.Translations
+@using KlabTranslations.Core
+@inject TranslationContext TranslationContext
+
+<PageTitle>KlabTranslations Blazor example</PageTitle>
+
+<h1><Translate Unit="Strings.hello_world" /></h1>
+<p><Translate Unit="Strings.welcome_user" Parameters="NameParameters" /></p>
+
+<label for="name">Name</label>
+<input id="name" @bind="_name" @bind:event="oninput" />
+
+<p>Culture: @TranslationContext.CurrentCulture.Name</p>
+<button @onclick='() => ChangeCulture("en-US")'>English</button>
+<button @onclick='() => ChangeCulture("de-DE")'>Deutsch</button>
+
+@code {
+    private string _name = "Ada";
+    private IReadOnlyDictionary<string, object?> NameParameters => new Dictionary<string, object?> { ["name"] = _name };
+
+    private void ChangeCulture(string culture) =>
+        TranslationContext.SetCulture(CultureInfo.GetCultureInfo(culture));
+}

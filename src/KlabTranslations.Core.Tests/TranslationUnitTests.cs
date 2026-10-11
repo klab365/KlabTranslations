@@ -91,6 +91,30 @@ public sealed class TranslationUnitTests : IDisposable
     }
 
     [Fact]
+    public void TranslationContexts_ShouldKeepCulturesIsolated()
+    {
+        Dictionary<string, string> translations = new()
+        {
+            ["en"] = "Hello",
+            ["de"] = "Hallo",
+            ["fr"] = "Bonjour"
+        };
+        TranslationContext firstContext = new(new CultureInfo("en-US"));
+        TranslationContext secondContext = new(new CultureInfo("de-DE"));
+        using TranslationUnit first = new("greeting", translations, firstContext);
+        using TranslationUnit second = new("greeting", translations, secondContext);
+
+        first.CurrentValue.Should().Be("Hello");
+        second.CurrentValue.Should().Be("Hallo");
+
+        firstContext.SetCulture(new CultureInfo("fr-FR"));
+
+        first.CurrentValue.Should().Be("Bonjour");
+        second.CurrentValue.Should().Be("Hallo");
+        secondContext.CurrentCulture.Name.Should().Be("de-DE");
+    }
+
+    [Fact]
     public void Constructor_ShouldInitializeWithTranslationForCurrentCulture()
     {
         // Arrange
