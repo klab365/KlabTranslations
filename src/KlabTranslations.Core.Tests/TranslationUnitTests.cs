@@ -31,6 +31,32 @@ public sealed class TranslationUnitTests : IDisposable
         return unit;
     }
 
+    [Theory]
+    [InlineData("fr", 0, PluralCategory.One)]
+    [InlineData("fr", 2, PluralCategory.Other)]
+    [InlineData("ru", 1, PluralCategory.One)]
+    [InlineData("ru", 2, PluralCategory.Few)]
+    [InlineData("ru", 5, PluralCategory.Many)]
+    [InlineData("ru", 1.5, PluralCategory.Other)]
+    [InlineData("ar", 0, PluralCategory.Zero)]
+    [InlineData("ar", 1, PluralCategory.One)]
+    [InlineData("ar", 2, PluralCategory.Two)]
+    [InlineData("ar", 5, PluralCategory.Few)]
+    [InlineData("ar", 15, PluralCategory.Many)]
+    [InlineData("en", 1, PluralCategory.One)]
+    [InlineData("en", 2, PluralCategory.Other)]
+    public void PluralRules_ShouldResolveCategoriesByCulture(string cultureName, decimal count, PluralCategory expected)
+    {
+        PluralRules.GetCategory(new CultureInfo(cultureName), count).Should().Be(expected);
+    }
+
+    [Fact]
+    public void PluralRules_ShouldRejectNullCulture()
+    {
+        Action act = () => PluralRules.GetCategory(null!, 1);
+        act.Should().Throw<ArgumentNullException>();
+    }
+
     [Fact]
     public void NamedCountParameter_ShouldSelectCultureSpecificPluralForm()
     {
