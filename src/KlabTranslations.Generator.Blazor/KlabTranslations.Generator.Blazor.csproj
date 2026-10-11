@@ -10,4 +10,25 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="../KlabTranslations.Core/KlabTranslations.Core.csproj" />
   </ItemGroup>
+
+  <!-- Include the source generator as an analyzer in this package. -->
+  <Target Name="BuildTranslationsGenerator" BeforeTargets="CoreCompile;Compile;Pack;GenerateNuspec;_GetPackageFiles;_WalkEachTargetPerFramework">
+    <PropertyGroup>
+      <_GeneratorConfiguration Condition="'$(Configuration)' == 'Release'">Release</_GeneratorConfiguration>
+      <_GeneratorConfiguration Condition="'$(Configuration)' != 'Release'">Debug</_GeneratorConfiguration>
+    </PropertyGroup>
+    <MSBuild Projects="../KlabTranslations.Generator/KlabTranslations.Generator.csproj"
+             Targets="Build"
+             Properties="Configuration=$(_GeneratorConfiguration);TargetFramework=netstandard2.0"
+             RemoveProperties="NoBuild" />
+    <ItemGroup>
+      <Analyzer Include="../KlabTranslations.Generator/bin/$(_GeneratorConfiguration)/netstandard2.0/KlabTranslations.Generator.dll" />
+      <None Include="../KlabTranslations.Generator/bin/$(_GeneratorConfiguration)/netstandard2.0/KlabTranslations.Generator.dll"
+            Pack="true"
+            PackagePath="analyzers/dotnet/cs/"
+            Visible="false" />
+      <TfmSpecificPackageFile Include="../KlabTranslations.Generator/bin/$(_GeneratorConfiguration)/netstandard2.0/KlabTranslations.Generator.dll"
+                              PackagePath="analyzers/dotnet/cs/" />
+    </ItemGroup>
+  </Target>
 </Project>
