@@ -4,7 +4,7 @@
   </ItemGroup>
 
   <ItemGroup>
-     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+     <PackageReference Include="Avalonia" />
 
     <ProjectReference Include="../../src/KlabTranslations.Generator/KlabTranslations.Generator.csproj"
                       OutputItemType="Analyzer"
