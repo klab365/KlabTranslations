@@ -46,7 +46,7 @@ For Avalonia projects, also add:
 
 Create a `Translations.csv` file in the project root with the following format:
 
-- Header row: 
+- Header row:
 
 ```csv
 Key,de-DE,en-US
@@ -124,12 +124,14 @@ Complete working examples are available in the `samples/` directory:
 
 ## 🛠️ Development
 
-Every command is available in the `Justfile` and can be run with `just <command>`:
+Development commands are available through mise:
 
 ```bash
-just build      # Build all projects
-just test       # Run all tests
-just clean      # Clean build artifacts
+mise install                 # Install project tools and restore dependencies
+mise run build               # Build all projects
+mise run test                # Run tests and collect coverage
+mise run check-format        # Verify formatting
+mise run clean                # Clean build artifacts
 ```
 
 ## 🔧 Architecture

@@ -7,21 +7,43 @@ on:
     branches: [main]
 
 jobs:
+  require-rebase:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Verify branch is rebased onto the base branch
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch origin "$BASE_REF"
+          git merge-base --is-ancestor "origin/$BASE_REF" HEAD
+
+          if [ -n "$(git rev-list --merges "origin/$BASE_REF..HEAD")" ]; then
+            echo "Rebase the branch onto $BASE_REF and avoid merge commits in the PR branch."
+            exit 1
+          fi
+
   check-format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
-      - uses: extractions/setup-just@v3
-
-      - name: Build Docker CI image
-        run: just build-ci-docker $(id -u)
+      - uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+          experimental: true
 
       - name: Build (for source generators)
-        run: just build
+        run: mise run build
 
       - name: Check Format
-        run: just check-format
+        run: mise run check-format
 
   test-static_analysis:
     runs-on: ubuntu-latest
@@ -32,16 +54,17 @@ jobs:
           # Disabling shallow clones is recommended for improving the relevancy of reporting
           fetch-depth: 0
 
-      - uses: extractions/setup-just@v3
-
-      - name: Build Docker CI image
-        run: just build-ci-docker $(id -u)
+      - uses: jdx/mise-action@v2
+        with:
+          install: true
+          cache: true
+          experimental: true
 
       - name: Build (for source generators)
-        run: just build
+        run: mise run build
 
       - name: Test
-        run: just test tmp
+        run: mise run test --output ./tmp
 
       - name: SonarQubeScan
         uses: SonarSource/sonarqube-scan-action@v6.0.0

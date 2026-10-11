@@ -9,12 +9,12 @@
 
   <ItemGroup>
     <ProjectReference Include="../../samples/KlabTranslations.AvaloniaExample/KlabTranslations.AvaloniaExample.csproj" />
-    <PackageReference Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Headless.XUnit" />
     
     <!-- Override Directory.Build.props xUnit v3 packages with v2 for Avalonia compatibility -->
-    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageReference Include="xunit" Version="2.9.2" />
-    <PackageReference Update="xunit.runner.visualstudio" Version="2.8.2">
+    <PackageReference Update="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Update="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
