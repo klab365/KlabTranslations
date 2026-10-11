@@ -61,6 +61,8 @@ message_count,Sie haben {0} Nachrichten,You have {0} messages
 
 ### 3. Use Generated Translations
 
+When a selected culture has no translation, KlabTranslations tries the matching parent/language translation first, then a translation stored under the invariant culture (the default), and finally returns the translation key itself. Thus a missing language or a missing value never causes lookup to throw.
+
 The generated class `Strings` can be found in your `namespace.Translations`:
 
 ```csharp
